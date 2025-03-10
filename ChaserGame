@@ -1,0 +1,183 @@
+import processing.sound.*;
+import java.util.ArrayList;
+ArrayList<Splat> splaters = new ArrayList<Splat>();
+PImage splat;
+PImage playerImg;
+Player player;  // Changed: declare a global Player instance
+// ====================================================
+// Global Game Variables
+// ====================================================
+SoundFile soundCatch, soundSpawn, soundInvul;  // Sound effects
+
+ArrayList<Chaser> chasers;    // List holding all chaser objects
+ScoreTracker scoreTracker;    // Tracks and displays the score
+
+// Timing & invulnerability variables
+float spawnInterval = 2000;   // Interval (ms) between spawns
+float lastSpawnTime = 0;      // Last spawn time (ms)
+float meter = 0;              // Invulnerability meter
+float meterMax = 100;         // Maximum value of invulnerability meter
+boolean invulnerable = false; // Invulnerability flag
+float invulTime = 5000;       // Duration of invulnerability (ms)
+float invulStartTime = 0;     // Start time of invulnerability
+// Delta-time tracking for smooth frame updates
+int previousMillis = 0;      // Store time of previous frame
+//Drops
+//Drop d;
+
+int numDrops;
+int dropInterval;
+int activeDrops;
+
+Drop [] drops;
+void setup() {
+  // Set up the canvas size and other settings
+  size(1500, 800);
+  imageMode(CENTER);
+  rectMode(CENTER);
+  textAlign(CENTER);
+  noCursor();  // Hide system cursor
+  background(51);
+
+  // Load sound effects (make sure the files exist in the 'data' folder)
+  soundCatch = new SoundFile(this, "S_JOS_00000.wav");
+  soundSpawn = new SoundFile(this, "click.wav");
+  soundInvul = new SoundFile(this, "AV004_00.wav");
+
+  // Create a player object (using an image if available)
+
+  // Uncomment if an image file is available:
+  playerImg = loadImage("player.png");
+  player = new Player(playerImg, 100, 100);
+  splat = loadImage("splat.png");
+  // Initialize chasers list and score tracker
+  chasers = new ArrayList<Chaser>();
+  scoreTracker = new ScoreTracker();
+
+  // Store the current time for frame-based time tracking
+  previousMillis = millis();
+  //store drop
+
+  //drops = new Drop [100];
+  //for (int i = 0; i < 100; i++)
+  //{
+    
+
+
+  //}
+  //dropTimer = new Timer(dropInterval);
+  //dropTimer.start();
+}
+
+void draw() 
+{
+
+  background(51);
+  // Draw subtle background grid pattern
+  drawBackgroundGrid();
+  int currentMillis = millis();
+  float dt = currentMillis - previousMillis;  // Use float for precise delta-time
+  //int r = (int)map(scoreTracker.getScore(), 0, 100, 51, 150);
+  previousMillis = currentMillis;
+  // ---------------------------------------------------
+  // Update Score Based on Time (delta-time)
+  // ---------------------------------------------------
+  scoreTracker.update(dt);
+  // ---------------------------------------------------
+  // Decorative Background Using Nested For Loops
+  // ---------------------------------------------------
+  // Gradually change the background color based on score
+  // Spawn new chasers if needed
+  if (millis() - lastSpawnTime > spawnInterval)
+  {
+    chasers.add(new Chaser());
+    lastSpawnTime = millis();
+    soundSpawn.play();
+  }
+
+  // Update and display drops
+  for (int i = 0; i < drops.length; i++)
+  {
+    drops[i].update();
+    drops[i].display();
+  }
+  //Update and display chasers
+  for (int i = 0; chasers.length; i++)
+  {
+    chasers.get(i);
+    chasers.display();
+    if (invulnerable && c.active && c.hits(mouseX, mouseY) )
+    {
+      soundCatch.play();
+      drops[i] = new Drop(c);
+      chasers.remove();
+      println("let's go:" + int(scoreTracker.getScore()));
+    }
+  }
+  //Display player and splat effects
+  player.display();
+  for (Splat s : splaters)
+  {
+    s.drawSplat();
+  }
+  //Manage invulnerability meter, display score, etc.
+  //(Handle meter logic and drawMeter() here.)
+}
+
+void keyPressed()
+{
+  // Toggle pause/resume with the 'P' key
+  if (key == 'p' || key == 'P')
+  {
+    if (isLooping())
+    {
+      noLoop();
+      println("Game Paused");
+    } else
+    {
+      loop();
+      println("Game Resumed");
+    }
+  }
+
+  // Reset the game with the 'R' key
+  if (key == 'r' || key == 'R')
+  {
+    resetGame();
+    println("Game Reset");
+  }
+
+  // Detect arrow key presses (for future use)
+  if (keyCode == UP)
+  {
+    println("UP key pressed");
+  } else if (keyCode == DOWN)
+  {
+    println("DOWN key pressed");
+  } else if (keyCode == LEFT)
+  {
+    println("LEFT key pressed");
+  } else if (keyCode == RIGHT)
+  {
+    println("RIGHT key pressed");
+  }
+}
+
+void keyReleased()
+{
+  println("Key released: " + key);
+}
+
+// ====================================================
+// resetGame()
+// Resets game variables and restarts the game
+// ====================================================
+void resetGame()
+{
+  chasers = new ArrayList<Chaser>();
+  scoreTracker = new ScoreTracker();
+  meter = 0;
+  invulnerable = false;
+  lastSpawnTime = millis();
+  loop();  // Restart the game loop
+}
